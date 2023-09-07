@@ -3,10 +3,15 @@ title: "Casino AB Test - Megapixel Entertainment Limited Casinos"
 author: "Olamide_Adu"
 date: "2023-09-01"
 output:
-  pdf_document:
+  html_document:
     toc: true
-    toc_depth: 3
-    number_sections: true
+    toc_depth: 2
+    toc_float: true
+    dev: svg
+    theme: simplex
+    highlight: zenburn
+    code_folding: show
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -184,7 +189,8 @@ corrplot(megapixel_chisqtest$residuals, is.cor = FALSE)
 > For a given cellm the size of the circle is proportional to the amoint of the cell contribution.
 
 Positive residuals are blue and negative are in red. The result here implies that Group A Treatment is having a strong positive association with being converted and a strong negative association with not being converted. The vice-versa is the case for Group B Treatment.
-  
+
+# Conclusion
 In conclusion, it can be seen that:
 
 - Group A is strongly associated with being converted.
