@@ -1,0 +1,200 @@
+---
+title: "Casino AB Test - Megapixel Entertainment Limited Casinos"
+author: "Olamide_Adu"
+date: "2023-09-01"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    dev: svg
+    theme: simplex
+    highlight: zenburn
+    code_folding: show
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Project Description
+![](/home/xrander/Downloads/casino.jpg)
+
+The A/B Test experiment for Megapixel Entertainment Limited provides a comprehensive overview of a series of experiments conducted to optimize player conversion and enhance the overall player experience on our online gaming platform. This report highlights the key experiments, methodologies, and outcomes that have contributed to data-driven decision-making at Megapixel Entertainment Ltd Online Casino.
+
+## Objectives
+The primary objective of this A/B test was to assess the impact of a redesigned homepage on player conversion rates at Megapixel Online Casino. We aimed to create a more engaging and user-friendly homepage to encourage new players to sign up and experience our online gaming platform.
+
+### Hypothesis
+For this experiment, we have the following hypothesis:
+
+-**Null Hypothesis (H0)**: The test group and their conversion are independent at 0.05 confidence interval.
+
+- **Alternative Hypothesis (H1)**: The test group and their conversion are not independent at 0.05 confidence interval.
+
+# Experiment Design
+Two different homepage were designed for the casino, this pages are Treatment A and Treatment B
+
+## Experimental Setup:
+We randomly assign visitors to the Megapixel Entertainment Ltd Casino homepage into two test groups:
+
+- A (Treatment A): Visitors are exposed to Treatment A, the first homepage design variant.
+
+- B (Treatment B): Visitors are shown Treatment B, the second homepage design variant.
+
+# Data Collection
+The data for this experiment was provided by Joshua Schnessl. The Key data point collected are:
+- UserID: the userid of the visitor,
+
+- Brand: the casino brand,
+
+- Test Group: the group the visitor is randomly assigned to, and
+
+- Converted: user convert yes or no, yes is 1 and no is 0.
+
+# Data Analysis
+Import the data and load the necessary libraries
+```{r results='hide', message=FALSE}
+## Load the library
+library(tidyverse)  ## All tidyverse package for visualization and data manipulation and management
+library(readxl) ## Load excel files
+library(ggthemes) ## Extra themes for ggplot
+library(broom) ## Convert statistical objects into data frames (tibbles)
+library(gplots) ## Extra plots for ggplot
+library(corrplot) #For visualizing correlation matrix
+
+## Import the data
+megapixel <- read_excel("/home/xrander/Documents/Job Application/Megapixel/Statistics Assessment Data.xlsx")
+```
+A preview of the data
+```{r}
+head(megapixel, 10)
+```
+
+
+## Investigate the data structure
+**Data dimension**
+```{r}
+dim(megapixel)
+```
+The data is having `r dim(megapixel)[1]` observations and `r dim(megapixel)[2]`` variables. Next we check for missing values, understand the structure of the data and undertake quick descriptive summary of the data
+
+## Missing Values
+```{r}
+unique(is.na(megapixel))
+```
+There are no missing values.
+
+## Data structure
+```{r}
+str(megapixel) # data structure
+summary(megapixel) # descriptive statistics summary
+```
+It will be better to convert `Test Group` and `Converted` variables to factors or categorical data.
+
+Next I will investigate each columns.
+```{r}
+length(unique(megapixel$UserID))
+length(unique(megapixel$Brand))
+length(unique(megapixel$`Test Group`))
+length(unique(megapixel$Converted))
+```
+## Duplicate Values
+Investigate to see if there are duplicate entries.
+```{r}
+unique(duplicated(megapixel))
+```
+
+## Data Manipulation
+```{r}
+megapixel <- megapixel %>%
+  mutate(`Test Group` = factor(`Test Group`))
+
+str(megapixel)
+```
+Test Group is now factor data type.
+
+```{r}
+megapixel %>%
+  ggplot(aes(`Test Group`))+
+  geom_bar(aes(fill = factor(Converted)),
+           position = "dodge")+
+  scale_fill_manual(values = c("darkolivegreen", "hotpink4"),
+                    labels = c("Not Converted", "Converted"))+
+  labs(x = "Test Group",
+       y = "Frequency",
+       fill = "Converted",
+       title = "Frequency of Conversion Across Test Groups")+
+  theme_bw()
+```
+
+## Conversion Rate Per Group
+The conversion rate according to groups
+```{r}
+megapixel %>%
+  group_by(`Test Group`) %>%
+  summarize(convert = sum(Converted),
+            total_in_group = length(Converted)) %>%
+  mutate(treatment_conversion_rate = convert/sum(total_in_group))
+```
+
+
+## Chi-Square Analysis
+**Chi-square analysis**
+```{r}
+megapixel_chisqtest <- chisq.test(megapixel$`Test Group`, megapixel$Converted, correct = FALSE)
+```
+
+**The Result**
+The results from the Chi-square test, excluding the p-value is given below.
+```{r}
+augment(megapixel_chisqtest)
+```
+This will be broken down to aid understanding
+
+### Observed values
+```{r}
+megapixel_chisqtest$observed
+```
+**Contingency table**
+```{r}
+mega_conti_table <- table(megapixel$`Test Group`, megapixel$Converted)
+colnames(mega_conti_table) <- c("Not Converted", "Converted")
+```
+
+The graphical display of the table is below:
+```{r}
+balloonplot(t(mega_conti_table), main = "Conversion According to Groups")
+```
+
+
+### Expected values
+```{r}
+megapixel_chisqtest$expected
+```
+
+### Chi-square statistics and p-value
+```{r}
+tidy(megapixel_chisqtest)
+```
+
+Given the result we reject the null-hypothesis and say the groups are dependent.
+
+Next, the contribution of each category will be investigated.
+```{r}
+corrplot(megapixel_chisqtest$residuals, is.cor = FALSE)
+```
+
+> For a given cellm the size of the circle is proportional to the amoint of the cell contribution.
+
+Positive residuals are blue and negative are in red. The result here implies that Group A Treatment is having a strong positive association with being converted and a strong negative association with not being converted. The vice-versa is the case for Group B Treatment.
+
+# Conclusion
+In conclusion, it can be seen that:
+
+- Group A is strongly associated with being converted.
+
+- Group B is not strongly associated with being converted in comparison to group A.
+
+This implies that Group A website should be implemented, however, this is not final as more analysis can be done.
